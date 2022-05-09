@@ -1,8 +1,8 @@
 import os
 import requests
 
-def transcribe ():
 
+def transcribe():
     while True:
 
         try:
@@ -11,18 +11,17 @@ def transcribe ():
             name = input()
             filename = os.getcwd() + "/Audios/" + name
 
-            print("The Audiofile " + name + " is processed ... ")
-
+            print("The Audiofile " + filename + " is processed ... ")
 
             # 2 Upload Audiofile to AssemblyAI Server
-            def read_file(filename, chunk_size=5242880):
-                with open(filename, "rb") as _file:
+
+            def read_file(file, chunk_size=5242880):
+                with open(file, "rb") as _file:
                     while True:
                         data = _file.read(chunk_size)
                         if not data:
                             break
                         yield data
-
 
             api_key = "ef8e04f3a41f4af28ac8b884537b1a83"
 
@@ -32,14 +31,13 @@ def transcribe ():
                                      data=read_file(filename))
 
             audio_url = response.json()["upload_url"]
-            # print(audio_url)
+            print(audio_url + " " + "was uploaded ... ")
 
             # 3 Transcribe the Audiofile
             endpoint = "https://api.assemblyai.com/v2/transcript"
 
-            print("Type in your language code further see https://docs.assemblyai.com/#supported-languages: ")
+            print("Type in your language code further see https://docs.assemblyai.com/#supported-languages:")
             lang_code = input()
-            print(type(lang_code))
 
             json = {
                 "audio_url": audio_url,
@@ -64,9 +62,17 @@ def transcribe ():
                 "authorization": api_key,
             }
 
-            transcript_output_response = requests.get(endpoint, headers=headers)
-            print("Process finished. Here is the Transcription of " + name + ":")
-            print(transcript_output_response.json()["text"])
+            while True:
+
+                transcript_output_response = requests.get(endpoint, headers=headers)
+
+                if transcript_output_response.json()["status"] == "completed":
+                    print("Transcription is finished \n")
+                    print(transcript_output_response.json()["text"])
+                    break
+                else:
+                    print("Process is " + transcript_output_response.json()["status"] + " ...")
+
             print("Do you want to continue? Type 'True' for Yes and type 'False' for No.")
             run = input()
 
@@ -76,5 +82,6 @@ def transcribe ():
             else:
                 print("Program finished - until next time :)!.")
                 break
+
         except:
             print("Ups, something went wrong. Start the program again and exactly follow the instructions :).")
